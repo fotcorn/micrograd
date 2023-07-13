@@ -1,16 +1,14 @@
 #include <iterator>
 #include <iostream>
 
+#include "dataset.h"
+
 template <int N>
 struct Neuron
 {
     float w[N];
     float b;
     bool relu;
-
-    float forward() {
-
-    }
 };
 
 #include "nn.h"
@@ -32,12 +30,7 @@ void forward(const Neuron<INPUT> neurons[OUTPUT], const float input[INPUT], floa
     }
 }
 
-int main()
-{
-    constexpr float x = -2.1357211788694928;
-    constexpr float y = -1.6040865570336573;
-    constexpr float expectedResult = -1.3584242781835707;
-
+float evaluate(float x, float y) {
     float input[] = {x , y};
     float outputL1[std::size(LAYER0)];
     float outputL2[std::size(LAYER1)];
@@ -46,9 +39,30 @@ int main()
     forward<2, std::size(LAYER0)>(LAYER0, input, outputL1);
     forward<16, std::size(LAYER1)>(LAYER1, outputL1, outputL2);
     forward<16, std::size(LAYER2)>(LAYER2, outputL2, outputL3);
+    return outputL3[0];
+}
 
-    std::cout << outputL3[0] << std::endl;
-    std::cout << expectedResult << std::endl;
+int main()
+{
+    int correct = 0;
+    float loss = 0.0f;
+    for (std::size_t i = 0; i < std::size(DATASET_LABELS); i++) {
+        float inputX = DATASET_VALUES[i][0];
+        float inputY = DATASET_VALUES[i][1];
+        float label = DATASET_LABELS[i];
+
+        float output = evaluate(inputX, inputY);
+
+        if (output < 0 == label < 0) {
+            correct++;
+        }
+
+        // hinge loss
+        loss += std::max(0.0f, 1.0f - label * output);
+    }
+
+    std::cout << "Accuracy: " << correct << "/" << std::size(DATASET_LABELS) << std::endl;
+    std::cout << "Loss: " << loss / static_cast<double>(std::size(DATASET_LABELS)) << std::endl;
 
     return 0;
 }
