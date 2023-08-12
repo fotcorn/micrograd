@@ -6,9 +6,10 @@
 template <int N>
 struct Neuron
 {
-    float w[N];
-    float b;
+    float weight[N];
+    float bias;
     bool relu;
+    float grad[N] = {};
 };
 
 #include "nn.h"
@@ -19,9 +20,9 @@ void forward(const Neuron<INPUT> neurons[OUTPUT], const float input[INPUT], floa
         const Neuron<INPUT>& neuron = neurons[i];
         float res = 0.0f;
         for (int j = 0; j < INPUT; j++) {
-            res += neuron.w[j] * input[j];
+            res += neuron.weight[j] * input[j];
         }
-        res += neuron.b;
+        res += neuron.bias;
 
         if (neuron.relu) {
             res = std::max(0.0f, res);
@@ -30,11 +31,35 @@ void forward(const Neuron<INPUT> neurons[OUTPUT], const float input[INPUT], floa
     }
 }
 
+template <int INPUT, int OUTPUT>
+void zeroGrad(Neuron<INPUT> neurons[OUTPUT]) {
+    for (int i = 0; i < OUTPUT; i++) {
+        Neuron<INPUT>& neuron = neurons[i];
+        for (int j = 0; j < INPUT; j++) {
+            neuron.grad[j] = 0;
+        }
+    }
+}
+
+void backward() {
+    // training loop
+        // set all gradients to 0
+        // loop over all examples
+            // evaluate example
+            // first gradient is equal to loss
+            // recursively update gradients
+        // adjust network weights based on gradient
+}
+
 float evaluate(float x, float y) {
     float input[] = {x , y};
     float outputL1[std::size(LAYER0)];
     float outputL2[std::size(LAYER1)];
     float outputL3[std::size(LAYER2)];
+
+    zeroGrad<2, std::size(LAYER0)>(LAYER0);
+    zeroGrad<16, std::size(LAYER1)>(LAYER1);
+    zeroGrad<16, std::size(LAYER2)>(LAYER2);
     
     forward<2, std::size(LAYER0)>(LAYER0, input, outputL1);
     forward<16, std::size(LAYER1)>(LAYER1, outputL1, outputL2);
