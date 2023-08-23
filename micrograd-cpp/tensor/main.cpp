@@ -9,8 +9,9 @@ int main() {
     tensor o = tensor<float>::ones({2,2});
 
     tensor<float> c = tensor<float>::constants({1.0f, 2.0f, 3.0f, 4.0f});
-
     tensor<float> x = tensor<float>::constants({3.0f});
+
+    tensor<float> matrix = tensor<float>::constants({{1.0f, 2.0f}, {3.0f, 4.0f}});
 
     std::cout << x.item() << std::endl;
     

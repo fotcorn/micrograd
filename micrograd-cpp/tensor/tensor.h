@@ -5,8 +5,9 @@
 #include <cassert>
 #include <span>
 
-// access single element
 // access submatrix/vectors
+// print
+// use initializer_list instead of vector
 
 template <typename T>
 class tensor {
@@ -46,6 +47,26 @@ public:
         std::vector<int> shape = {static_cast<int>(data.size())};
         tensor<T> t(shape);
         std::copy(data.begin(), data.end(), t.data.get());
+        return t;
+    }
+
+    static tensor<T> constants(std::vector<std::vector<T>> data) {
+        if (data.empty()) {
+            throw std::runtime_error("Input data cannot be empty.");
+        }
+        size_t subvector_size = data[0].size();
+        for (const auto& subvector : data) {
+            if (subvector.size() != subvector_size) {
+                throw std::runtime_error("All subvectors must be the same size.");
+            }
+        }
+        std::vector<int> shape = {static_cast<int>(data.size()), static_cast<int>(subvector_size)};
+        tensor<T> t(shape);
+        T* ptr = t.data.get();
+        for (const auto& subvector : data) {
+            std::copy(subvector.begin(), subvector.end(), ptr);
+            ptr += subvector_size;
+        }
         return t;
     }
 
