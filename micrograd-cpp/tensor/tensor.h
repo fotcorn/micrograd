@@ -6,23 +6,24 @@
 #include <span>
 #include <sstream>
 
-
-// access submatrix/vectors
-// print
-// use initializer_list instead of vector
+// todo: make size a member again
+// todo: implement elementwise operations
+// todo: implement elementwise with broadcast
 
 template <typename T>
-class tensor {
+class tensor final {
 public:
-    tensor(std::vector<size_t> shape) : shape(shape) {
+    tensor(std::vector<size_t> shape, T init = 0) : shape(shape) {
         offset = 0;
-        size = 1;
+        size_t size = 1;
         for (int dim : shape) {
             if(dim <= 0)
                 throw std::runtime_error("Dimension size must be greater than 0");
             size *= dim;
         }
         data = std::shared_ptr<T[]>(new T[size]);
+        std::fill_n(data.get(), size, init);
+
         strides.resize(shape.size());
         strides.back() = 1;
         for (int i = shape.size() - 2; i >= 0; --i) {
@@ -38,10 +39,7 @@ public:
     }
 
     static tensor<T> ones(std::vector<size_t> shape) {
-        tensor<T> t(shape);
-        for (size_t i = 0; i < t.size; i++) {
-            t.data[i] = 1;
-        }
+        tensor<T> t(shape, 1);
         return t;
     }
 
@@ -72,6 +70,21 @@ public:
         return t;
     }
 
+    tensor<T> operator[](size_t index) {
+        if (index >= shape[0]) {
+            throw std::runtime_error("index out of range");
+        }
+        size_t new_offset = this->offset + this->strides[0] * index;
+        if (shape.size() == 1) {
+            std::vector<size_t> new_shape({1});
+            std::vector<size_t> new_strides({1});
+            return tensor<T>(this->data, new_offset, new_shape, new_strides);
+        }
+        std::vector<size_t> new_shape(this->shape.begin() + 1, this->shape.end());
+        std::vector<size_t> new_strides(this->strides.begin() + 1, this->strides.end());
+        return tensor<T>(this->data, new_offset, new_shape, new_strides);
+    }
+
     std::string to_string() const {
         if (shape.size() > 2) {
             throw std::runtime_error("to_string() only works on tensors with one or two dimensions.");
@@ -80,7 +93,7 @@ public:
         if (shape.size() == 1) {
             ss << "[";
             for (size_t i = 0; i < shape[0]; i++) {
-                ss << data[i];
+                ss << data[offset + i];
                 if (i != shape[0] - 1) {
                     ss << ", ";
                 }
@@ -91,14 +104,14 @@ public:
             for (size_t i = 0; i < shape[0]; i++) {
                 ss << "  [";
                 for (size_t j = 0; j < shape[1]; j++) {
-                    ss << data[i * strides[0] + j * strides[1]];
+                    ss << data[offset + i * strides[0] + j * strides[1]];
                     if (j != shape[1] - 1) {
                         ss << ", ";
                     }
                 }
                 ss << "]\n";
             }
-            ss << "]\n";
+            ss << "]";
         }
         return ss.str();
     }
@@ -108,11 +121,12 @@ public:
         return os;
     }
     
-
 private:
-    size_t size;
+    tensor(std::shared_ptr<T[]> data, size_t offset, std::vector<size_t> shape, std::vector<size_t> strides) 
+        : data(data), offset(offset), shape(shape), strides(strides) {}
+
+    std::shared_ptr<T[]> data;
     size_t offset;
     std::vector<size_t> shape;
-    std::shared_ptr<T[]> data;
     std::vector<size_t> strides;
 };

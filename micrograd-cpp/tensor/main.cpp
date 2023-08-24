@@ -15,6 +15,11 @@ int main() {
 
     
     std::cout << c << "\n" << x << "\n" << matrix << std::endl;
+
+    std::cout << matrix[0] << std::endl;
+    std::cout << matrix[1] << std::endl;
+
+    std::cout << matrix[1][0].item() << std::endl;
     
 
 
