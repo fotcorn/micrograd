@@ -12,7 +12,7 @@
 template <typename T>
 class tensor {
 public:
-    tensor(std::vector<int> shape) : shape(shape) {
+    tensor(std::vector<size_t> shape) : shape(shape) {
         offset = 0;
         size = 1;
         for (int dim : shape) {
@@ -35,16 +35,16 @@ public:
         return data[offset];
     }
 
-    static tensor<T> ones(std::vector<int> shape) {
+    static tensor<T> ones(std::vector<size_t> shape) {
         tensor<T> t(shape);
-        for (uint64_t i = 0; i < t.size; i++) {
+        for (size_t i = 0; i < t.size; i++) {
             t.data[i] = 1;
         }
         return t;
     }
 
     static tensor<T> constants(std::vector<T> data) {
-        std::vector<int> shape = {static_cast<int>(data.size())};
+        std::vector<size_t> shape = {data.size()};
         tensor<T> t(shape);
         std::copy(data.begin(), data.end(), t.data.get());
         return t;
@@ -60,7 +60,7 @@ public:
                 throw std::runtime_error("All subvectors must be the same size.");
             }
         }
-        std::vector<int> shape = {static_cast<int>(data.size()), static_cast<int>(subvector_size)};
+        std::vector<size_t> shape = {data.size(), subvector_size};
         tensor<T> t(shape);
         T* ptr = t.data.get();
         for (const auto& subvector : data) {
@@ -70,10 +70,40 @@ public:
         return t;
     }
 
+    void print() {
+        if (shape.size() > 2) {
+            throw std::runtime_error("print() only works on tensors with one or two dimensions.");
+        }
+        if (shape.size() == 1) {
+            std::cout << "[";
+            for (size_t i = 0; i < shape[0]; i++) {
+                std::cout << data[i];
+                if (i != shape[0] - 1) {
+                    std::cout << ", ";
+                }
+            }
+            std::cout << "]";
+        } else if (shape.size() == 2) {
+            std::cout << "[\n";
+            for (size_t i = 0; i < shape[0]; i++) {
+                std::cout << "  [";
+                for (size_t j = 0; j < shape[1]; j++) {
+                    std::cout << data[i * strides[0] + j * strides[1]];
+                    if (j != shape[1] - 1) {
+                        std::cout << ", ";
+                    }
+                }
+                std::cout << "]\n";
+            }
+            std::cout << "]\n";
+        }
+    }
+    
+
 private:
     size_t size;
     size_t offset;
-    std::vector<int> shape;
+    std::vector<size_t> shape;
     std::shared_ptr<T[]> data;
     std::vector<size_t> strides;
 };

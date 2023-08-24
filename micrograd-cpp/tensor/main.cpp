@@ -13,7 +13,13 @@ int main() {
 
     tensor<float> matrix = tensor<float>::constants({{1.0f, 2.0f}, {3.0f, 4.0f}});
 
-    std::cout << x.item() << std::endl;
+    
+    c.print();
+    std::cout << std::endl;
+    x.print();
+    std::cout << std::endl;
+    matrix.print();
+    std::cout << std::endl;
     
 
 
