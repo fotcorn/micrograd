@@ -4,6 +4,8 @@
 #include <vector>
 #include <cassert>
 #include <span>
+#include <sstream>
+
 
 // access submatrix/vectors
 // print
@@ -28,7 +30,7 @@ public:
         }
     };
 
-    T item() {
+    T item() const {
         if (!(shape.size() == 1 && shape[0] == 1)) {
             throw std::runtime_error("item() only works on tensors with one element.");
         }
@@ -70,33 +72,40 @@ public:
         return t;
     }
 
-    void print() {
+    std::string to_string() const {
         if (shape.size() > 2) {
-            throw std::runtime_error("print() only works on tensors with one or two dimensions.");
+            throw std::runtime_error("to_string() only works on tensors with one or two dimensions.");
         }
+        std::stringstream ss;
         if (shape.size() == 1) {
-            std::cout << "[";
+            ss << "[";
             for (size_t i = 0; i < shape[0]; i++) {
-                std::cout << data[i];
+                ss << data[i];
                 if (i != shape[0] - 1) {
-                    std::cout << ", ";
+                    ss << ", ";
                 }
             }
-            std::cout << "]";
+            ss << "]";
         } else if (shape.size() == 2) {
-            std::cout << "[\n";
+            ss << "[\n";
             for (size_t i = 0; i < shape[0]; i++) {
-                std::cout << "  [";
+                ss << "  [";
                 for (size_t j = 0; j < shape[1]; j++) {
-                    std::cout << data[i * strides[0] + j * strides[1]];
+                    ss << data[i * strides[0] + j * strides[1]];
                     if (j != shape[1] - 1) {
-                        std::cout << ", ";
+                        ss << ", ";
                     }
                 }
-                std::cout << "]\n";
+                ss << "]\n";
             }
-            std::cout << "]\n";
+            ss << "]\n";
         }
+        return ss.str();
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const tensor<T>& t) {
+        os << t.to_string();
+        return os;
     }
     
 
