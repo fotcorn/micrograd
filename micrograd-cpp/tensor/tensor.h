@@ -6,7 +6,6 @@
 #include <span>
 #include <sstream>
 
-// todo: make size a member again
 // todo: implement elementwise operations
 // todo: implement elementwise with broadcast
 
@@ -15,7 +14,7 @@ class tensor final {
 public:
     tensor(std::vector<size_t> shape, T init = 0) : shape(shape) {
         offset = 0;
-        size_t size = 1;
+        size = 1;
         for (int dim : shape) {
             if(dim <= 0)
                 throw std::runtime_error("Dimension size must be greater than 0");
@@ -78,11 +77,15 @@ public:
         if (shape.size() == 1) {
             std::vector<size_t> new_shape({1});
             std::vector<size_t> new_strides({1});
-            return tensor<T>(this->data, new_offset, new_shape, new_strides);
+            return tensor<T>(this->data, new_offset, 1, new_shape, new_strides);
         }
         std::vector<size_t> new_shape(this->shape.begin() + 1, this->shape.end());
         std::vector<size_t> new_strides(this->strides.begin() + 1, this->strides.end());
-        return tensor<T>(this->data, new_offset, new_shape, new_strides);
+        size_t new_size = 1;
+        for (int dim : new_shape) {
+            new_size *= dim;
+        }
+        return tensor<T>(this->data, new_offset, new_size, new_shape, new_strides);
     }
 
     std::string to_string() const {
@@ -122,11 +125,12 @@ public:
     }
     
 private:
-    tensor(std::shared_ptr<T[]> data, size_t offset, std::vector<size_t> shape, std::vector<size_t> strides) 
-        : data(data), offset(offset), shape(shape), strides(strides) {}
+    tensor(std::shared_ptr<T[]> data, size_t offset, size_t size, std::vector<size_t> shape, std::vector<size_t> strides) 
+        : data(data), offset(offset), size(size), shape(shape), strides(strides) {}
 
     std::shared_ptr<T[]> data;
     size_t offset;
+    size_t size;
     std::vector<size_t> shape;
     std::vector<size_t> strides;
 };
