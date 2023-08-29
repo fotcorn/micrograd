@@ -37,19 +37,19 @@ public:
         return data[offset];
     }
 
-    static tensor<T> ones(std::vector<size_t> shape) {
+    static tensor<T> ones(const std::vector<size_t>& shape) {
         tensor<T> t(shape, 1);
         return t;
     }
 
-    static tensor<T> constants(std::vector<T> data) {
+    static tensor<T> constants(const std::vector<T>& data) {
         std::vector<size_t> shape = {data.size()};
         tensor<T> t(shape);
         std::copy(data.begin(), data.end(), t.data.get());
         return t;
     }
 
-    static tensor<T> constants(std::vector<std::vector<T>> data) {
+    static tensor<T> constants(const std::vector<std::vector<T>>& data) {
         if (data.empty()) {
             throw std::runtime_error("Input data cannot be empty.");
         }
@@ -69,7 +69,7 @@ public:
         return t;
     }
 
-    tensor<T> operator[](size_t index) {
+    tensor<T> operator[](const size_t index) {
         if (index >= shape[0]) {
             throw std::runtime_error("index out of range");
         }
@@ -86,6 +86,19 @@ public:
             new_size *= dim;
         }
         return tensor<T>(this->data, new_offset, new_size, new_shape, new_strides);
+    }
+
+    tensor<T> add(const tensor<T>& op) const {
+        if (op.size != 1) {
+            throw new std::runtime_error("only single operands supported");
+        }
+        T value = op.item();
+        tensor<T> result(this->shape);
+
+        for (size_t i = 0; i < result.size; i++) {
+            result.data.get()[i] = value + data.get()[offset + i];
+        }
+        return result;
     }
 
     std::string to_string() const {
